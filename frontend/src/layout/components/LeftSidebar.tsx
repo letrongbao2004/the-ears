@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { HomeIcon, Library, MessageCircle, Search } from "lucide-react"
+import { HomeIcon, Library, MessageCircle, Search, Music } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { SignedIn } from "@clerk/clerk-react"
@@ -49,6 +49,19 @@ const LeftSidebar = () => {
                 <span className="hidden md:inline">Search</span>
             </Link>
 
+            <Link 
+                to={"/playlists"}
+                className={cn(
+                    buttonVariants({
+                        variant: "ghost",
+                        className: "w-full justify-start text-white hover:bg-zinc-800",
+                    })
+                )}
+            >
+                <Music className="mr-2 size-5" />
+                <span className="hidden md:inline">PLaylists</span>
+            </Link>
+
             <SignedIn>
                 <Link 
                 to={"/chat"}
@@ -71,7 +84,7 @@ const LeftSidebar = () => {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center text-white px-2">
                     <Library className="mr-2 size-5" />
-                    <span className="hidden md:inline">Playlists</span>
+                    <span className="hidden md:inline">Albums</span>
                 </div>
             </div>
 

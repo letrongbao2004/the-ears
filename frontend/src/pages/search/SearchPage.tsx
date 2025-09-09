@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Clock } from "lucide-react";
+import { Play, Pause, Plus, Music } from "lucide-react";
 import { Link } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
 
@@ -13,20 +14,25 @@ const formatDuration = (seconds: number) => {
 };
 
 const SearchPage = () => {
-    const { searchResults, searchQuery, isSearching, searchMusic, clearSearch } = useMusicStore();
+    const { searchResults, searchQuery, isSearching, clearSearch } = useMusicStore();
     const { currentSong, isPlaying, setCurrentSong, playAlbum, togglePlay } = usePlayerStore();
-    const [localQuery, setLocalQuery] = useState("");
+    const { playlists, fetchPlaylists, addSongToPlaylist } = usePlaylistStore();
+    // const [localQuery, setLocalQuery] = useState("");
+    const [showPlaylistMenu, setShowPlaylistMenu] = useState<string | null>(null);
 
     useEffect(() => {
+        // Fetch playlists when component mounts
+        fetchPlaylists();
+        
         // Clear search when component unmounts
         return () => {
             clearSearch();
         };
-    }, [clearSearch]);
+    }, [clearSearch, fetchPlaylists]);
 
-    const handleSongClick = (song: any) => {
-        setCurrentSong(song);
-    };
+    // const handleSongClick = (song: any) => {
+    //     setCurrentSong(song);
+    // };
 
     const handlePlaySong = (song: any) => {
         const isCurrentSong = currentSong?._id === song._id;
@@ -41,10 +47,26 @@ const SearchPage = () => {
         playAlbum(album.songs, 0);
     };
 
+    const handleAddToPlaylist = async (songId: string, playlistId: string) => {
+        try {
+            await addSongToPlaylist(playlistId, songId);
+            setShowPlaylistMenu(null);
+        } catch (error) {
+            console.error("Failed to add song to playlist:", error);
+        }
+    };
+
     const hasResults = searchResults.songs.length > 0 || searchResults.albums.length > 0;
 
     return (
         <div className="h-full bg-black/20 backdrop-blur-sm rounded-md overflow-hidden">
+            {/* Click outside to close playlist menu */}
+            {showPlaylistMenu && (
+                <div
+                    className="fixed inset-0 z-0"
+                    onClick={() => setShowPlaylistMenu(null)}
+                />
+            )}
             <div className="p-6">
                 <h1 className="text-3xl font-bold mb-6">Search</h1>
                 
@@ -97,6 +119,53 @@ const SearchPage = () => {
                                                         <div className="flex items-center gap-2">
                                                             <div className="text-sm text-gray-400">
                                                                 {formatDuration(song.duration)}
+                                                            </div>
+                                                            <div className="relative">
+                                                                <Button
+                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    onClick={() => setShowPlaylistMenu(showPlaylistMenu === song._id ? null : song._id)}
+                                                                    className="opacity-70 hover:opacity-100 transition-opacity text-gray-400 hover:text-white"
+                                                                    title="Add to playlist"
+                                                                >
+                                                                    <Plus className="h-4 w-4" />
+                                                                </Button>
+                                                                
+                                                                {showPlaylistMenu === song._id && (
+                                                                    <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-10 min-w-48">
+                                                                        <div className="py-1">
+                                                                            <div className="px-3 py-2 text-sm text-gray-300 border-b border-zinc-700">
+                                                                                Add to Playlist
+                                                                            </div>
+                                                                            {playlists.length > 0 ? (
+                                                                                playlists.map((playlist) => (
+                                                                                    <button
+                                                                                        key={playlist._id}
+                                                                                        onClick={() => handleAddToPlaylist(song._id, playlist._id)}
+                                                                                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-300 hover:bg-zinc-700 hover:text-white"
+                                                                                    >
+                                                                                        <Music className="h-4 w-4" />
+                                                                                        {playlist.name}
+                                                                                    </button>
+                                                                                ))
+                                                                            ) : (
+                                                                                <div className="px-3 py-2 text-sm text-gray-400">
+                                                                                    No playlists yet
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="border-t border-zinc-700 mt-1">
+                                                                                <Link
+                                                                                    to="/playlists"
+                                                                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-400 hover:bg-zinc-700 hover:text-green-300"
+                                                                                    onClick={() => setShowPlaylistMenu(null)}
+                                                                                >
+                                                                                    <Plus className="h-4 w-4" />
+                                                                                    Create New Playlist
+                                                                                </Link>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <Button
                                                                 size="icon"

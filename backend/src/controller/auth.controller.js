@@ -12,7 +12,7 @@ export const authCallback = async (req, res, next) => {
       // sign up
       await User.create({
         clerkID: id,
-        fullName: `${firstName} ${lastName}`,
+        fullName: `${firstName || ""} ${lastName || ""}`.trim(),
         imageUrl
       });
     }

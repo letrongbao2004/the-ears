@@ -3,11 +3,15 @@ import { Outlet } from "react-router-dom";
 import LeftSidebar from "./components/LeftSidebar";
 import FriendsActivity from "./components/FriendsActivity";
 import AudioPlayer from "./components/AudioPlayer";
+import VideoPlayer from "./components/VideoPlayer";
 import { PlaybackControls } from "./components/PlaybackControls";
+import KaraokeView from "./components/KaraokeView";
+import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useEffect, useState } from "react";
 
 const MainLayout = () => {
 	const [isMobile, setIsMobile] = useState(false);
+	const { showKaraoke } = usePlayerStore();
 
 	useEffect(() => {
 		const checkMobile = () => {
@@ -31,6 +35,7 @@ const MainLayout = () => {
 			
 			<ResizablePanelGroup direction='horizontal' className='flex-1 flex h-full overflow-hidden p-2 relative z-10'>
 				<AudioPlayer />
+				<VideoPlayer />
 				{/* left sidebar */}
 				<ResizablePanel defaultSize={20} minSize={isMobile ? 0 : 10} maxSize={30}>
 					<LeftSidebar />
@@ -40,7 +45,7 @@ const MainLayout = () => {
 
 				{/* Main content */}
 				<ResizablePanel defaultSize={isMobile ? 80 : 60}>
-					<Outlet />
+					{showKaraoke ? <KaraokeView /> : <Outlet />}
 				</ResizablePanel>
 
 				{!isMobile && (

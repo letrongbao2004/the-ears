@@ -18,9 +18,18 @@ const songSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        videoUrl:{
+            type: String,
+            required: false
+        },
         duration:{
             type: Number,
             required: true
+        },
+        lyrics:{
+            type: String,
+            required: false,
+            default: ""
         },
         albumId:{
             type: mongoose.Schema.Types.ObjectId,

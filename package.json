@@ -1,0 +1,21 @@
+{
+  "name": "webmusic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/letrongbao2004/the-ears.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/letrongbao2004/the-ears/issues"
+  },
+  "homepage": "https://github.com/letrongbao2004/the-ears#readme"
+}

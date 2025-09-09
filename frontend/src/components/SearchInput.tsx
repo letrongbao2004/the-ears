@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { useNavigate } from "react-router-dom";
+import { Plus, Music } from "lucide-react";
 
 interface SearchInputProps {
     placeholder?: string;
@@ -16,7 +18,9 @@ const SearchInput = ({ placeholder = "Search for songs, albums, or artists...", 
     const [localQuery, setLocalQuery] = useState("");
     const { searchMusic, clearSearch, searchQuery, isSearching, searchResults } = useMusicStore();
     const { setCurrentSong } = usePlayerStore();
+    const { playlists, fetchPlaylists, addSongToPlaylist } = usePlaylistStore();
     const navigate = useNavigate();
+    const [showPlaylistMenu, setShowPlaylistMenu] = useState<string | null>(null);
     
     // Debounce search to avoid too many API calls
     const debouncedQuery = useDebounce(localQuery, 300);
@@ -28,6 +32,10 @@ const SearchInput = ({ placeholder = "Search for songs, albums, or artists...", 
             clearSearch();
         }
     }, [debouncedQuery, searchMusic, clearSearch]);
+
+    useEffect(() => {
+        fetchPlaylists();
+    }, [fetchPlaylists]);
 
     const handleClear = () => {
         setLocalQuery("");
@@ -42,8 +50,24 @@ const SearchInput = ({ placeholder = "Search for songs, albums, or artists...", 
         navigate(`/albums/${album._id}`);
     };
 
+    const handleAddToPlaylist = async (songId: string, playlistId: string) => {
+        try {
+            await addSongToPlaylist(playlistId, songId);
+            setShowPlaylistMenu(null);
+        } catch (error) {
+            console.error("Failed to add song to playlist:", error);
+        }
+    };
+
     return (
         <div className={`relative ${className}`}>
+            {/* Click outside to close playlist menu */}
+            {showPlaylistMenu && (
+                <div
+                    className="fixed inset-0 z-0"
+                    onClick={() => setShowPlaylistMenu(null)}
+                />
+            )}
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -83,17 +107,70 @@ const SearchInput = ({ placeholder = "Search for songs, albums, or artists...", 
                                         {searchResults.songs.slice(0, 5).map((song) => (
                                             <div
                                                 key={song._id}
-                                                onClick={() => handleSongClick(song)}
-                                                className="flex items-center gap-3 p-2 hover:bg-zinc-700 rounded cursor-pointer"
+                                                className="flex items-center gap-3 p-2 hover:bg-zinc-700 rounded group"
                                             >
-                                                <img
-                                                    src={song.imageUrl}
-                                                    alt={song.title}
-                                                    className="w-10 h-10 rounded object-cover"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-medium text-white truncate">{song.title}</div>
-                                                    <div className="text-sm text-gray-400 truncate">{song.artist}</div>
+                                                <div 
+                                                    onClick={() => handleSongClick(song)}
+                                                    className="flex items-center gap-3 flex-1 cursor-pointer"
+                                                >
+                                                    <img
+                                                        src={song.imageUrl}
+                                                        alt={song.title}
+                                                        className="w-10 h-10 rounded object-cover"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-medium text-white truncate">{song.title}</div>
+                                                        <div className="text-sm text-gray-400 truncate">{song.artist}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="relative">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowPlaylistMenu(showPlaylistMenu === song._id ? null : song._id);
+                                                        }}
+                                                        className="opacity-70 hover:opacity-100 transition-opacity text-gray-400 hover:text-white h-8 w-8"
+                                                        title="Add to playlist"
+                                                    >
+                                                        <Plus className="h-4 w-4" />
+                                                    </Button>
+                                                    
+                                                    {showPlaylistMenu === song._id && (
+                                                        <div className="absolute right-0 top-8 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-10 min-w-48">
+                                                            <div className="py-1">
+                                                                <div className="px-3 py-2 text-sm text-gray-300 border-b border-zinc-700">
+                                                                    Add to Playlist
+                                                                </div>
+                                                                {playlists.length > 0 ? (
+                                                                    playlists.map((playlist) => (
+                                                                        <button
+                                                                            key={playlist._id}
+                                                                            onClick={() => handleAddToPlaylist(song._id, playlist._id)}
+                                                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-300 hover:bg-zinc-700 hover:text-white"
+                                                                        >
+                                                                            <Music className="h-4 w-4" />
+                                                                            {playlist.name}
+                                                                        </button>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="px-3 py-2 text-sm text-gray-400">
+                                                                        No playlists yet
+                                                                    </div>
+                                                                )}
+                                                                <div className="border-t border-zinc-700 mt-1">
+                                                                    <button
+                                                                        onClick={() => navigate("/playlists")}
+                                                                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-400 hover:bg-zinc-700 hover:text-green-300"
+                                                                    >
+                                                                        <Plus className="h-4 w-4" />
+                                                                        Create New Playlist
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

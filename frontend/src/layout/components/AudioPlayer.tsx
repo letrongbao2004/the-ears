@@ -45,6 +45,14 @@ const AudioPlayer = () => {
 		}
 	}, [currentSong, isPlaying]);
 
+	// Expose audio element for video sync
+	useEffect(() => {
+		if (audioRef.current) {
+			// Store reference globally for video sync
+			(window as any).audioElement = audioRef.current;
+		}
+	}, []);
+
 	return <audio ref={audioRef} />;
 };
 export default AudioPlayer;

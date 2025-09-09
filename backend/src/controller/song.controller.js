@@ -25,6 +25,9 @@ export const getFeaturedSongs = async (req, res, next) => {
                     artist:1,
                     imageUrl: 1,
                     audioUrl: 1,
+                    videoUrl: 1,
+                    lyrics: 1,
+                    duration: 1,
                 },
             },
        ]);
@@ -49,6 +52,9 @@ export const getMadeForYouSongs = async (req, res, next) => {
                     artist:1,
                     imageUrl: 1,
                     audioUrl: 1,
+                    videoUrl: 1,
+                    lyrics: 1,
+                    duration: 1,
                 },
             },
        ]);
@@ -73,6 +79,9 @@ export const getTrendingSongs = async (req, res, next) => {
                     artist:1,
                     imageUrl: 1,
                     audioUrl: 1,
+                    videoUrl: 1,
+                    lyrics: 1,
+                    duration: 1,
                 },
             },
        ]);

@@ -131,6 +131,14 @@ const songs = [
 		audioUrl: "/songs/18.mp3",
 		duration: 29, // 0:29
 	},
+	{
+		title: "Ước Mơ Của Mẹ",
+		artist: "Hứa Kim Tuyền",
+		imageUrl: "/cover-images/uocmocuame.jpg",
+		audioUrl: "/songs/uocmocuame.mp3",
+		videoUrl: "/videos/uocmocuame.mp4",
+		duration: "2:24", // 2:24
+	},
 ];
 
 const seedSongs = async () => {

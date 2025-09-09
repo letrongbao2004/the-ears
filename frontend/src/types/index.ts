@@ -5,6 +5,8 @@ export interface Song {
 	albumId: string | null;
 	imageUrl: string;
 	audioUrl: string;
+	videoUrl?: string;
+	lyrics: string;
 	duration: number;
 	createdAt: string;
 	updatedAt: string;
@@ -40,4 +42,16 @@ export interface User {
 	clerkId: string;
 	fullName: string;
 	imageUrl: string;
+}
+
+export interface Playlist {
+	_id: string;
+	name: string;
+	description: string;
+	userId: string;
+	songs: Song[];
+	isPublic: boolean;
+	coverImage: string;
+	createdAt: string;
+	updatedAt: string;
 }

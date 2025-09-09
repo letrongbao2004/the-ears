@@ -16,7 +16,7 @@ export const getStats = async (req, res, next) => {
           Song.aggregate([
             {
               $unionWith:{
-                coll: "album",
+                coll: "albums",
                 pipeline: [],
               }
             },
