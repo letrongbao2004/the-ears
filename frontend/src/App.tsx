@@ -7,7 +7,9 @@ import ChatPage from "./pages/chat/ChatPage"
 import AlbumPage from "./pages/album/AlbumPage"
 import SearchPage from "./pages/search/SearchPage"
 import PlaylistPage from "./pages/playlist/PlaylistPage"
+import PlaylistsPage from "./pages/playlists/PlaylistsPage"
 import AdminPage from "./pages/admin/AdminPage"
+import VideoPage from "./layout/components/VideoPage";
 
 import { Toaster } from "react-hot-toast"
 import NotFoundPage from "./pages/404/NotFoundPage"
@@ -30,7 +32,9 @@ function App() {
           <Route path ="/search" element={<SearchPage/>} />
           <Route path ="/chat" element={<ChatPage/>} />
           <Route path ="/albums/:albumId" element={<AlbumPage/>} />
-          <Route path ="/playlists" element={<PlaylistPage/>} />
+          <Route path ="/playlists" element={<PlaylistsPage/>} />
+          <Route path ="/playlists/:playlistId" element={<PlaylistPage/>} />
+          <Route path ="/video" element={<VideoPage/>} />
           <Route path ="/*" element={<NotFoundPage/>} />
         </Route>
       </Routes>

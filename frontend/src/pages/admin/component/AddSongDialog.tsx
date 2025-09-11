@@ -37,13 +37,17 @@ const AddSongDialog = () => {
 		lyrics: "",
 	});
 
-	const [files, setFiles] = useState<{ audio: File | null; image: File | null }>({
-		audio: null,
-		image: null,
-	});
+	const [files, setFiles] = useState<{ audio: File | null; image: File | null; video: File | null }>(
+		{
+			audio: null,
+			image: null,
+			video: null,
+		}
+	);
 
 	const audioInputRef = useRef<HTMLInputElement>(null);
 	const imageInputRef = useRef<HTMLInputElement>(null);
+	const videoInputRef = useRef<HTMLInputElement>(null);
 
 	const handleSubmit = async () => {
 		setIsLoading(true);
@@ -67,6 +71,9 @@ const AddSongDialog = () => {
 
 			formData.append("audioFile", files.audio);
 			formData.append("imageFile", files.image);
+			if (files.video) {
+				formData.append("videoFile", files.video);
+			}
 
 			await axiosInstance.post("/admin/songs", formData, {
 				headers: {
@@ -85,6 +92,7 @@ const AddSongDialog = () => {
 			setFiles({
 				audio: null,
 				image: null,
+				video: null,
 			});
 			toast.success("Song added successfully");
 		} catch (error: any) {
@@ -157,6 +165,23 @@ const AddSongDialog = () => {
 						<div className='flex items-center gap-2'>
 							<Button variant='outline' onClick={() => audioInputRef.current?.click()} className='w-full'>
 								{files.audio ? files.audio.name.slice(0, 20) : "Choose Audio File"}
+							</Button>
+						</div>
+					</div>
+
+					{/* Optional Video upload */}
+					<input
+						type='file'
+						accept='video/mp4'
+						ref={videoInputRef}
+						hidden
+						onChange={(e) => setFiles((prev) => ({ ...prev, video: e.target.files![0] }))}
+					/>
+					<div className='space-y-2'>
+						<label className='text-sm font-medium'>Music Video (Optional, .mp4)</label>
+						<div className='flex items-center gap-2'>
+							<Button variant='outline' onClick={() => videoInputRef.current?.click()} className='w-full'>
+								{files.video ? files.video.name.slice(0, 20) : "Choose Video File (.mp4)"}
 							</Button>
 						</div>
 					</div>

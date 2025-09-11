@@ -4,6 +4,7 @@ import { useChatStore } from "@/stores/useChatStore";
 import { useAuth } from "@clerk/clerk-react";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
+import { setTokenGetter } from "@/lib/authToken";
 
 const updateApiToken = (token: string | null) => {
 	if (token) axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -19,6 +20,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	useEffect(() => {
 		const initAuth = async () => {
 			try {
+				// register token getter for axios per-request token injection
+				setTokenGetter(getToken);
 				const token = await getToken();
 				updateApiToken(token);
 				if (token) {

@@ -69,3 +69,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide scrollbars utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Equalizer bars for now playing indicator (QueuePanel) */
+.eq-bar {
+  display: inline-block;
+  width: 2px;
+  height: 8px;
+  margin-left: 2px;
+  background-color: rgb(16 185 129); /* emerald-500 */
+  animation: eq-bounce 1s infinite ease-in-out;
+}
+.eq-bar:nth-child(2) { animation-delay: 0.2s; }
+.eq-bar:nth-child(3) { animation-delay: 0.4s; }
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1.2); }
+}
+
+/* Panel fade/slide animation for right sidebar content */
+.panel-animate {
+  animation: panelFadeSlide 200ms ease;
+}
+@keyframes panelFadeSlide {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Micro interaction for icon buttons */
+.btn-press {
+  transition: transform 180ms ease, color 150ms ease, background-color 150ms ease;
+}
+.btn-press:active {
+  transform: scale(0.95);
+}

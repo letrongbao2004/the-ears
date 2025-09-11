@@ -18,7 +18,7 @@ const formatTime = (date: string) => {
 
 const ChatPage = () => {
 	const { user } = useUser();
-	const { messages, selectedUser, fetchUsers, fetchMessages } = useChatStore();
+	const { messages, selectedUser, fetchUsers, fetchMessages, error } = useChatStore();
 
 	useEffect(() => {
 		if (user) fetchUsers();
@@ -39,6 +39,11 @@ const ChatPage = () => {
 
 				{/* chat message */}
 				<div className='flex flex-col h-full'>
+					{error && (
+						<div className='bg-red-600/20 text-red-300 text-sm px-3 py-2'>
+							{error}
+						</div>
+					)}
 					{selectedUser ? (
 						<>
 							<ChatHeader />

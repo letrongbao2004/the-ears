@@ -46,7 +46,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 		set({ isLoading: true, error: null });
 		try {
 			const response = await axiosInstance.get("/users");
-			set({ users: response.data });
+			const apiUsers = response.data as any[];
+			const normalizedUsers = apiUsers.map((u) => ({
+				...u,
+				clerkId: u.clerkId ?? u.clerkID,
+			}));
+			set({ users: normalizedUsers });
 		} catch (error: any) {
 			set({ error: error.response.data.message });
 		} finally {
@@ -59,7 +64,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			socket.auth = { userId };
 			socket.connect();
 
-			socket.emit("user_connected", userId);
+			socket.on("connect", () => {
+				set({ isConnected: true, error: null });
+				socket.emit("user_connected", userId);
+			});
+
+			socket.on("disconnect", () => {
+				set({ isConnected: false });
+			});
 
 			socket.on("users_online", (users: string[]) => {
 				set({ onlineUsers: new Set(users) });
@@ -95,6 +107,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 				}));
 			});
 
+			// handle errors
+			socket.on("message_error", (errMsg: string) => {
+				set({ error: errMsg });
+			});
+
+			socket.on("connect_error", (err: any) => {
+				set({ error: err?.message || "Socket connection error" });
+			});
+
 			socket.on("activity_updated", ({ userId, activity }) => {
 				set((state) => {
 					const newActivities = new Map(state.userActivities);
@@ -109,6 +130,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	disconnectSocket: () => {
 		if (get().isConnected) {
+			// remove listeners to avoid duplicates on re-init
+			socket.off("users_online");
+			socket.off("activities");
+			socket.off("user_connected");
+			socket.off("user_disconnected");
+			socket.off("receive_message");
+			socket.off("message_sent");
+			socket.off("message_error");
+			socket.off("connect_error");
 			socket.disconnect();
 			set({ isConnected: false });
 		}
@@ -117,6 +147,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	sendMessage: async (receiverId, senderId, content) => {
 		const socket = get().socket;
 		if (!socket) return;
+
+		if (!receiverId || !senderId || !content) {
+			set({ error: "Missing receiver, sender or content" });
+			return;
+		}
 
 		socket.emit("send_message", { receiverId, senderId, content });
 	},

@@ -7,6 +7,12 @@ const uploadToCloudinary = async (file) => {
 	try {
 		const result = await cloudinary.uploader.upload(file.tempFilePath, {
 			resource_type: "auto",
+			// Preserve full video duration and quality
+			transformation: file.mimetype.startsWith('video/') ? [
+				{ quality: "auto:best", fetch_format: "auto" }
+			] : undefined,
+			// Increase timeout for longer videos
+			timeout: 120000, // 2 minutes
 		});
 		return result.secure_url;
 	} catch (error) {
@@ -24,9 +30,18 @@ export const createSong = async (req, res, next) => {
 		const { title, artist, albumId, duration, lyrics } = req.body;
 		const audioFile = req.files.audioFile;
 		const imageFile = req.files.imageFile;
+		const videoFile = req.files?.videoFile; // optional
 
 		const audioUrl = await uploadToCloudinary(audioFile);
 		const imageUrl = await uploadToCloudinary(imageFile);
+		let videoUrl = "";
+		if (videoFile) {
+			try {
+				videoUrl = await uploadToCloudinary(videoFile);
+			} catch (e) {
+				console.log("Optional video upload failed", e);
+			}
+		}
 
 		const song = new Song({
 			title,
@@ -36,6 +51,7 @@ export const createSong = async (req, res, next) => {
 			duration,
 			lyrics: lyrics || "",
 			albumId: albumId || null,
+			...(videoUrl ? { videoUrl } : {}),
 		});
 
 		await song.save();

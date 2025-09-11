@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Video, VideoOff } from "lucide-react";
+import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Video, VideoOff, BarChart3 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { parseLRC } from "@/lib/utils";
+import { useNavigate, useLocation } from "react-router-dom";
 
 type TimedLyricLine = { time: number; text: string };
 
@@ -15,7 +16,7 @@ const formatTime = (seconds: number) => {
 };
 
 export const PlaybackControls = () => {
-	const { currentSong, isPlaying, togglePlay, playNext, playPrevious, showVideo, toggleVideo, showKaraoke, toggleKaraoke } = usePlayerStore();
+	const { currentSong, isPlaying, togglePlay, playNext, playPrevious, showVideo, toggleVideo, showKaraoke, toggleKaraoke, showQueue, toggleQueue, showGenreAnalysis, toggleGenreAnalysis, shuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode, setShowVideo } = usePlayerStore();
 
 	const [volume, setVolume] = useState(75);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -80,6 +81,34 @@ export const PlaybackControls = () => {
 		};
 	}, [currentSong, karaokeLines, karaokeIndex]);
 
+	// remove previous behavior that muted audio when showing video so music keeps playing
+	// (intentionally no effect here)
+
+	// auto open/close video route based on current song and playback state
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	useEffect(() => {
+		// only auto-open video when song with video starts playing
+		if (currentSong?.videoUrl && isPlaying && !showVideo) {
+			setShowVideo(true);
+			if (location.pathname !== "/video") navigate("/video");
+			return;
+		}
+
+		// only close video if no video available
+		if (!currentSong?.videoUrl && showVideo) {
+			setShowVideo(false);
+			if (location.pathname === "/video") {
+				try { 
+					navigate(-1); 
+				} catch {
+					navigate("/");
+				}
+			}
+		}
+	}, [currentSong?.videoUrl, isPlaying, showVideo, setShowVideo, location.pathname, navigate]);
+
 	// parse karaoke lines when song lyrics change
 	useEffect(() => {
 		if (!currentSong?.lyrics) {
@@ -104,20 +133,22 @@ export const PlaybackControls = () => {
 		}
 	}, [karaokeIndex, showLyrics, showKaraoke, autoScroll]);
 
-	const handleSeek = (value: number[]) => {
-		if (audioRef.current) {
-			audioRef.current.currentTime = value[0];
-			// Update karaoke index immediately when seeking
-			if (karaokeLines.length > 0) {
-				let idx = 0;
-				for (let i = 0; i < karaokeLines.length; i++) {
-					if (karaokeLines[i].time <= value[0] + 0.05) {
-						idx = i;
-					} else {
-						break;
-					}
-				}
-				setKaraokeIndex(idx);
+
+
+	// helpers for video rendering
+
+	const handleVideoButtonClick = () => {
+		if (!currentSong?.videoUrl) return;
+		// toggle store flag
+		toggleVideo();
+		// navigate based on resulting state (showVideo will flip)
+		const willShow = !showVideo;
+		if (willShow) {
+			navigate("/video");
+		} else {
+			// if currently at /video, go back or to home
+			if (location.pathname === "/video") {
+				navigate(-1);
 			}
 		}
 	};
@@ -148,11 +179,13 @@ export const PlaybackControls = () => {
 
 				{/* player controls*/}
 				<div className='flex flex-col items-center gap-2 flex-1 max-w-full sm:max-w-[45%]'>
-					<div className='flex items-center gap-4 sm:gap-6'>
+					<div className='flex items-center gap-3 sm:gap-5'>
 						<Button
 							size='icon'
 							variant='ghost'
-							className='hidden sm:inline-flex hover:text-white text-zinc-400'
+							className={`btn-press hidden sm:inline-flex hover:text-white ${shuffleEnabled ? 'text-emerald-400' : 'text-zinc-400'}`}
+							onClick={toggleShuffle}
+							title='Shuffle'
 						>
 							<Shuffle className='h-4 w-4' />
 						</Button>
@@ -160,7 +193,7 @@ export const PlaybackControls = () => {
 						<Button
 							size='icon'
 							variant='ghost'
-							className='hover:text-white text-zinc-400'
+							className='btn-press hover:text-white text-zinc-400'
 							onClick={playPrevious}
 							disabled={!currentSong}
 						>
@@ -169,7 +202,7 @@ export const PlaybackControls = () => {
 
 						<Button
 							size='icon'
-							className='bg-white hover:bg-white/80 text-black rounded-full h-8 w-8'
+							className='btn-press bg-white hover:bg-white/80 text-black rounded-full h-8 w-8'
 							onClick={togglePlay}
 							disabled={!currentSong}
 						>
@@ -178,19 +211,27 @@ export const PlaybackControls = () => {
 						<Button
 							size='icon'
 							variant='ghost'
-							className='hover:text-white text-zinc-400'
+							className='btn-press hover:text-white text-zinc-400'
 							onClick={playNext}
 							disabled={!currentSong}
 						>
 							<SkipForward className='h-4 w-4' />
 						</Button>
-						<Button
-							size='icon'
-							variant='ghost'
-							className='hidden sm:inline-flex hover:text-white text-zinc-400'
-						>
-							<Repeat className='h-4 w-4' />
-						</Button>
+
+						<div className='relative'>
+							<Button
+								size='icon'
+								variant='ghost'
+								className={`btn-press hidden sm:inline-flex hover:text-white ${repeatMode !== 'off' ? 'text-emerald-400' : 'text-zinc-400'}`}
+								onClick={cycleRepeatMode}
+								title={`Repeat: ${repeatMode}`}
+							>
+								<Repeat className='h-4 w-4' />
+							</Button>
+							{repeatMode === 'one' && (
+								<span className='absolute -top-1 -right-1 text-[10px] leading-none px-1 rounded-full bg-emerald-500 text-black'>1</span>
+							)}
+						</div>
 					</div>
 
 					<div className='hidden sm:flex items-center gap-2 w-full'>
@@ -200,11 +241,16 @@ export const PlaybackControls = () => {
 							max={duration || 100}
 							step={1}
 							className='w-full hover:cursor-grab active:cursor-grabbing'
-							onValueChange={handleSeek}
+							onValueChange={(value) => {
+								if (audioRef.current) {
+									audioRef.current.currentTime = value[0];
+								}
+							}}
 						/>
 						<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
 					</div>
 				</div>
+
 				{/* volume controls */}
 				<div className='hidden sm:flex items-center gap-4 min-w-[180px] w-[30%] justify-end'>
 					{/* Lyrics Button */}
@@ -260,7 +306,7 @@ export const PlaybackControls = () => {
 						</>
 					)}
 					
-					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
+					<Button size='icon' variant='ghost' className={`btn-press hover:text-white ${showQueue ? 'text-emerald-400' : 'text-zinc-400'}`} onClick={toggleQueue}>
 						<ListMusic className='h-4 w-4' />
 					</Button>
 					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
@@ -273,12 +319,26 @@ export const PlaybackControls = () => {
 							size='icon' 
 							variant='ghost' 
 							className={`hover:text-white ${showVideo ? 'text-green-400' : 'text-zinc-400'}`}
-							onClick={toggleVideo}
+							onClick={handleVideoButtonClick}
 							title={showVideo ? 'Hide Video' : 'Show Video'}
 						>
 							{showVideo ? <VideoOff className='h-4 w-4' /> : <Video className='h-4 w-4' />}
 						</Button>
 					)}
+
+					{/* Genre Analysis Toggle Button */}
+					<Button 
+						size='icon' 
+						variant='ghost' 
+						className={`hover:text-white ${showGenreAnalysis ? 'text-blue-400' : 'text-zinc-400'}`}
+						onClick={toggleGenreAnalysis}
+						title={showGenreAnalysis ? 'Hide Music Analysis' : 'Show Music Analysis'}
+					>
+						<BarChart3 className='h-4 w-4' />
+					</Button>
+
+					{/* Centered Video Modal */}
+					{/* removed modal rendering; now handled by /video route */}
 
 					<div className='flex items-center gap-2'>
 						<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>

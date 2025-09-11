@@ -3,15 +3,16 @@ import { Outlet } from "react-router-dom";
 import LeftSidebar from "./components/LeftSidebar";
 import FriendsActivity from "./components/FriendsActivity";
 import AudioPlayer from "./components/AudioPlayer";
-import VideoPlayer from "./components/VideoPlayer";
 import { PlaybackControls } from "./components/PlaybackControls";
 import KaraokeView from "./components/KaraokeView";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useEffect, useState } from "react";
+import QueuePanel from "./components/QueuePanel";
+import GenreClassifierComponent from "@/components/GenreClassifier";
 
 const MainLayout = () => {
 	const [isMobile, setIsMobile] = useState(false);
-	const { showKaraoke } = usePlayerStore();
+	const { showKaraoke, showQueue, showGenreAnalysis } = usePlayerStore();
 
 	useEffect(() => {
 		const checkMobile = () => {
@@ -27,7 +28,7 @@ const MainLayout = () => {
 		<div 
 			className='h-screen text-white flex flex-col bg-cover bg-center bg-no-repeat relative'
 			style={{
-				backgroundImage: 'url(/background.jpg)',
+				backgroundImage: 'url(/background.jpg)', // Replace with your desired background image URL
 			}}
 		>
 			{/* Semi-transparent overlay for better text readability */}
@@ -35,17 +36,15 @@ const MainLayout = () => {
 			
 			<ResizablePanelGroup direction='horizontal' className='flex-1 flex h-full overflow-hidden p-2 relative z-10'>
 				<AudioPlayer />
-				<VideoPlayer />
 				{/* left sidebar */}
 				<ResizablePanel defaultSize={20} minSize={isMobile ? 0 : 10} maxSize={30}>
 					<LeftSidebar />
 				</ResizablePanel>
-
 				<ResizableHandle className='w-2 bg-black rounded-lg transition-colors' />
 
 				{/* Main content */}
 				<ResizablePanel defaultSize={isMobile ? 80 : 60}>
-					{showKaraoke ? <KaraokeView /> : <Outlet />}
+					<Outlet />
 				</ResizablePanel>
 
 				{!isMobile && (
@@ -54,12 +53,14 @@ const MainLayout = () => {
 
 						{/* right sidebar */}
 						<ResizablePanel defaultSize={20} minSize={0} maxSize={25} collapsedSize={0}>
-							<FriendsActivity />
+							<div className='panel-animate h-full'>
+								{showKaraoke ? <KaraokeView /> : (showQueue ? <QueuePanel /> : (showGenreAnalysis ? <GenreClassifierComponent /> : <FriendsActivity />))}
+							</div>
 						</ResizablePanel>
 					</>
 				)}
 			</ResizablePanelGroup>
-
+			
 			<div className='relative z-10'>
 				<PlaybackControls />
 			</div>
