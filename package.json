@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm start --prefix backend"
+    "start": "cd backend && npm start"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/letrongbao2004/the-ears/issues"
   },

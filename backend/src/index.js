@@ -23,6 +23,12 @@ import playlistRoutes from "./routes/playlist.route.js";
 // Load environment variables first
 dotenv.config();
 
+// Validate critical environment variables
+if (!process.env.MONGODB_URI) {
+	console.error("❌ MONGODB_URI environment variable is required");
+	process.exit(1);
+}
+
 // Log startup information
 console.log("🚀 Starting server...");
 console.log("📍 Node version:", process.version);
