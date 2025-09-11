@@ -14,4 +14,16 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-slider'],
+          utils: ['axios', 'clsx', 'tailwind-merge']
+        }
+      }
+    }
+  }
 });
