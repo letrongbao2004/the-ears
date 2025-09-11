@@ -20,8 +20,15 @@ import albumRoutes from "./routes/album.route.js";
 import statRoutes from "./routes/stat.route.js";
 import playlistRoutes from "./routes/playlist.route.js";
 
-
+// Load environment variables first
 dotenv.config();
+
+// Log startup information
+console.log("🚀 Starting server...");
+console.log("📍 Node version:", process.version);
+console.log("📍 Environment:", process.env.NODE_ENV || "development");
+console.log("📍 Port:", process.env.PORT || "5000");
+console.log("📍 MongoDB URI exists:", !!process.env.MONGODB_URI);
 
 const __dirname = path.resolve();
 const app = express();
@@ -107,17 +114,37 @@ app.use((err, req, res, next) => {
 
 const start = async () => {
 	try {
+		console.log("🔌 Connecting to MongoDB...");
 		await connectDB();
-		httpServer.listen(PORT || 5000, () => {
-			console.log("Server is running on port " + (PORT || 5000));
+		console.log("✅ MongoDB connected successfully");
+		
+		const port = PORT || 5000;
+		httpServer.listen(port, "0.0.0.0", () => {
+			console.log(`✅ Server is running on port ${port}`);
+			console.log("🎵 The Ears music app is ready!");
 		});
 	} catch (error) {
-		console.error("Failed to start server:", error);
+		console.error("❌ Failed to start server:", error.message);
+		console.error("Stack trace:", error.stack);
 		process.exit(1);
 	}
 };
 
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+	console.error('❌ Uncaught Exception:', error.message);
+	console.error('Stack trace:', error.stack);
+	process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+	console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+	process.exit(1);
+});
+
 start().catch((error) => {
-	console.error("Unhandled error during startup:", error);
+	console.error("❌ Unhandled error during startup:", error.message);
+	console.error("Stack trace:", error.stack);
 	process.exit(1);
 });
