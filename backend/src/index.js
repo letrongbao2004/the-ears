@@ -106,10 +106,18 @@ app.use((err, req, res, next) => {
 });
 
 const start = async () => {
-	await connectDB();
-	httpServer.listen(PORT, () => {
-		console.log("Server is running on port " + PORT);
-	});
+	try {
+		await connectDB();
+		httpServer.listen(PORT || 5000, () => {
+			console.log("Server is running on port " + (PORT || 5000));
+		});
+	} catch (error) {
+		console.error("Failed to start server:", error);
+		process.exit(1);
+	}
 };
 
-start();
+start().catch((error) => {
+	console.error("Unhandled error during startup:", error);
+	process.exit(1);
+});
