@@ -3,13 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "cd backend && npm start"
+    "start": "npm run --prefix backend"
   },
   "repository": {
     "type": "git",
@@ -18,7 +14,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/letrongbao2004/the-ears/issues"
   },

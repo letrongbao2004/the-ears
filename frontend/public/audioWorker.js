@@ -1,23 +1,27 @@
 // Improved Audio Analysis Web Worker
 class AudioAnalyzer {
 
-  // Improved tempo detection using autocorrelation
+  // Fast tempo detection using simplified autocorrelation
   calculateTempoAutocorrelation(audioData, sampleRate) {
-    const windowSize = 4096;
-    const maxLag = Math.floor(sampleRate * 2); // 2 seconds max
-    const minTempo = 60; // BPM
-    const maxTempo = 200; // BPM
+    const windowSize = 1024; // Reduced from 4096
+    const maxLag = Math.floor(sampleRate * 0.5); // Reduced from 2 seconds to 0.5
+    const minTempo = 80; // BPM
+    const maxTempo = 180; // BPM
+    const stepSize = 8; // Skip samples for speed
     
-    // Calculate autocorrelation
+    // Use smaller sample for analysis
+    const sampleLength = Math.min(audioData.length, sampleRate * 10); // Max 10 seconds
+    const analysisData = audioData.slice(0, sampleLength);
+    
     const autocorr = new Array(maxLag).fill(0);
     
-    for (let lag = Math.floor(sampleRate * 60 / maxTempo); lag < Math.floor(sampleRate * 60 / minTempo) && lag < maxLag; lag++) {
+    for (let lag = Math.floor(sampleRate * 60 / maxTempo); lag < Math.floor(sampleRate * 60 / minTempo) && lag < maxLag; lag += stepSize) {
       let sum = 0;
       let count = 0;
       
-      for (let i = 0; i < audioData.length - lag - windowSize; i += windowSize) {
-        for (let j = 0; j < windowSize; j++) {
-          sum += audioData[i + j] * audioData[i + j + lag];
+      for (let i = 0; i < analysisData.length - lag - windowSize; i += windowSize * 2) {
+        for (let j = 0; j < windowSize; j += 4) { // Skip samples
+          sum += analysisData[i + j] * analysisData[i + j + lag];
           count++;
         }
       }
@@ -29,7 +33,7 @@ class AudioAnalyzer {
     let maxCorr = 0;
     let bestLag = 0;
     
-    for (let lag = Math.floor(sampleRate * 60 / maxTempo); lag < Math.floor(sampleRate * 60 / minTempo) && lag < maxLag; lag++) {
+    for (let lag = Math.floor(sampleRate * 60 / maxTempo); lag < Math.floor(sampleRate * 60 / minTempo) && lag < maxLag; lag += stepSize) {
       if (autocorr[lag] > maxCorr) {
         maxCorr = autocorr[lag];
         bestLag = lag;
@@ -41,9 +45,10 @@ class AudioAnalyzer {
 
   // Optimized spectral features for faster processing
   calculateSpectralFeatures(audioData, sampleRate) {
-    const fftSize = 512; // Reduced from 1024
-    const hopSize = 1024; // Increased for speed
-    const numFrames = Math.floor((audioData.length - fftSize) / hopSize);
+    const fftSize = 256; // Further reduced for speed
+    const hopSize = 2048; // Increased for speed
+    const maxFrames = 20; // Limit number of frames analyzed
+    const numFrames = Math.min(maxFrames, Math.floor((audioData.length - fftSize) / hopSize));
     
     let spectralCentroid = 0;
     let spectralRolloff = 0;
@@ -53,9 +58,7 @@ class AudioAnalyzer {
     let spectralFlux = 0;
     let prevSpectrum = null;
     
-    const maxFrames = Math.min(numFrames, 20); // Reduced from 50
-    
-    for (let frame = 0; frame < maxFrames; frame++) {
+    for (let frame = 0; frame < numFrames; frame++) {
       const start = frame * hopSize;
       const window = audioData.slice(start, start + fftSize);
       
@@ -266,9 +269,9 @@ class AudioAnalyzer {
   calculateChromaFeatures(audioData, sampleRate) {
     const chromaBins = 12; // 12 semitones
     const chroma = new Array(chromaBins).fill(0);
-    const fftSize = 512; // Reduced from 1024
-    const hopSize = 1024; // Increased for speed
-    const numFrames = Math.min(10, Math.floor((audioData.length - fftSize) / hopSize)); // Reduced from 30
+    const fftSize = 256; // Further reduced for speed
+    const hopSize = 2048; // Increased for speed
+    const numFrames = Math.min(5, Math.floor((audioData.length - fftSize) / hopSize)); // Further reduced
     
     for (let frame = 0; frame < numFrames; frame++) {
       const start = frame * hopSize;
@@ -358,11 +361,66 @@ class AudioAnalyzer {
     return maxCorr;
   }
   
-  // Simplified harmonic features for faster processing
+  // Calculate harmonic features for genre classification
   calculateHarmonicFeatures(audioData, sampleRate) {
-    const fftSize = 512; // Reduced from 2048
-    const hopSize = 1024;
-    const numFrames = Math.min(10, Math.floor((audioData.length - fftSize) / hopSize)); // Reduced from 20
+    const fftSize = 256;
+    const hopSize = 2048;
+    const numFrames = Math.min(8, Math.floor((audioData.length - fftSize) / hopSize));
+    
+    let harmonicity = 0;
+    let spectralCentroidMean = 0;
+    
+    for (let frame = 0; frame < numFrames; frame++) {
+      const start = frame * hopSize;
+      const window = audioData.slice(start, start + fftSize);
+      const windowedData = this.applyHammingWindow(window);
+      const spectrum = this.calculateFFT(windowedData);
+      const powerSpectrum = this.getPowerSpectrum(spectrum);
+      
+      // Find fundamental frequency
+      const f0 = this.estimateFundamentalFreq(powerSpectrum, sampleRate, fftSize);
+      
+      if (f0 > 0) {
+        // Calculate harmonicity
+        let harmonicEnergy = 0;
+        let totalEnergy = 0;
+        
+        for (let harmonic = 1; harmonic <= 5; harmonic++) {
+          const harmonicFreq = f0 * harmonic;
+          const bin = Math.round(harmonicFreq * fftSize / sampleRate);
+          
+          if (bin < powerSpectrum.length) {
+            harmonicEnergy += powerSpectrum[bin];
+          }
+        }
+        
+        totalEnergy = powerSpectrum.reduce((a, b) => a + b, 0);
+        harmonicity += totalEnergy > 0 ? harmonicEnergy / totalEnergy : 0;
+      }
+      
+      // Calculate spectral centroid for this frame
+      let centroidNum = 0, centroidDen = 0;
+      for (let bin = 0; bin < powerSpectrum.length; bin++) {
+        const frequency = (bin * sampleRate) / fftSize;
+        centroidNum += frequency * powerSpectrum[bin];
+        centroidDen += powerSpectrum[bin];
+      }
+      spectralCentroidMean += centroidDen > 0 ? centroidNum / centroidDen : 0;
+    }
+    
+    return {
+      harmonicity: numFrames > 0 ? harmonicity / numFrames : 0,
+      spectralCentroid: numFrames > 0 ? spectralCentroidMean / numFrames : 0
+    };
+  }
+
+  // Calculate comprehensive MFCC coefficients
+  calculateMFCC(audioData, sampleRate) {
+    const numCoeffs = 8; // Reduced from 13
+    const numFilters = 16; // Reduced from 26
+    const fftSize = 256; // Reduced for speed
+    const hopSize = 2048; // Increased for speed
+    const numFrames = Math.min(8, Math.floor((audioData.length - fftSize) / hopSize)); // Further reduced // Reduced from 20
     
     let harmonicity = 0;
     let spectralCentroidMean = 0;

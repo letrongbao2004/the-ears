@@ -20,21 +20,8 @@ import albumRoutes from "./routes/album.route.js";
 import statRoutes from "./routes/stat.route.js";
 import playlistRoutes from "./routes/playlist.route.js";
 
-// Load environment variables first
+
 dotenv.config();
-
-// Validate critical environment variables
-if (!process.env.MONGODB_URI) {
-	console.error("❌ MONGODB_URI environment variable is required");
-	process.exit(1);
-}
-
-// Log startup information
-console.log("🚀 Starting server...");
-console.log("📍 Node version:", process.version);
-console.log("📍 Environment:", process.env.NODE_ENV || "development");
-console.log("📍 Port:", process.env.PORT || "5000");
-console.log("📍 MongoDB URI exists:", !!process.env.MONGODB_URI);
 
 const __dirname = path.resolve();
 const app = express();
@@ -45,29 +32,10 @@ initializeSocket(httpServer);
 
 app.use(
 	cors({
-		origin: process.env.NODE_ENV === "production" 
-			? [process.env.FRONTEND_URL || "https://the-ears.onrender.com"]
-			: ["http://localhost:5173", "http://localhost:3000"],
+		origin: ["http://localhost:5173", "http://localhost:3000"],
 		credentials: true,
 	})
 );
-
-// Content Security Policy middleware
-app.use((req, res, next) => {
-	res.setHeader(
-		'Content-Security-Policy',
-		"default-src 'self'; " +
-		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://*.clerk.dev; " +
-		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-		"font-src 'self' https://fonts.gstatic.com data:; " +
-		"img-src 'self' data: blob: https: http:; " +
-		"media-src 'self' blob: https: http:; " +
-		"connect-src 'self' https: wss: ws:; " +
-		"worker-src 'self' blob:; " +
-		"frame-src 'self' https:;"
-	);
-	next();
-});
 
 app.use(express.json()); // to parse req.body
 app.use(clerkMiddleware()); // this will add auth to req obj => req.auth
@@ -119,38 +87,10 @@ app.use((err, req, res, next) => {
 });
 
 const start = async () => {
-	try {
-		console.log("🔌 Connecting to MongoDB...");
-		await connectDB();
-		console.log("✅ MongoDB connected successfully");
-		
-		const port = PORT || 5000;
-		httpServer.listen(port, "0.0.0.0", () => {
-			console.log(`✅ Server is running on port ${port}`);
-			console.log("🎵 The Ears music app is ready!");
-		});
-	} catch (error) {
-		console.error("❌ Failed to start server:", error.message);
-		console.error("Stack trace:", error.stack);
-		process.exit(1);
-	}
+	await connectDB();
+	httpServer.listen(PORT, () => {
+		console.log("Server is running on port " + PORT);
+	});
 };
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-	console.error('❌ Uncaught Exception:', error.message);
-	console.error('Stack trace:', error.stack);
-	process.exit(1);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-	console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-	process.exit(1);
-});
-
-start().catch((error) => {
-	console.error("❌ Unhandled error during startup:", error.message);
-	console.error("Stack trace:", error.stack);
-	process.exit(1);
-});
+start();
