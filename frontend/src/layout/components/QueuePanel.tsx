@@ -42,7 +42,7 @@ const QueuePanel = () => {
                         <div className='space-y-1'>
                             {upcoming.length === 0 && <div className='text-zinc-500 text-sm'>Queue is empty</div>}
                             {upcoming.map((song, i) => (
-                                <div key={song._id} className='grid grid-cols-[20px_1fr] items-center gap-3 transition-all hover:bg-white/5 rounded px-2 py-1'>
+                                <div key={`upcoming-${song._id}-${i}`} className='grid grid-cols-[20px_1fr] items-center gap-3 transition-all hover:bg-white/5 rounded px-2 py-1'>
                                     <div className='text-[11px] text-zinc-400 text-center'>{currentIndex + 1 + i + 1}</div>
                                     <div className='flex items-center gap-3'>
                                         <img src={song.imageUrl} alt={song.title} className='size-8 rounded object-cover' />
@@ -73,8 +73,8 @@ const QueuePanel = () => {
                                     if (uniq.length >= 20) break;
                                 }
                                 if (uniq.length === 0) return <div className='text-zinc-500 text-sm'>No history yet</div>;
-                                return uniq.map((song) => (
-                                    <div key={song._id} className='grid grid-cols-[20px_1fr] items-center gap-3 transition-all hover:bg-white/5 rounded px-2 py-1'>
+                                return uniq.map((song, index) => (
+                                    <div key={`history-${song._id}-${index}`} className='grid grid-cols-[20px_1fr] items-center gap-3 transition-all hover:bg-white/5 rounded px-2 py-1'>
                                         <div className='text-[11px] text-zinc-400 text-center'>•</div>
                                         <div className='flex items-center gap-3'>
                                             <img src={song.imageUrl} alt={song.title} className='size-8 rounded object-cover' />

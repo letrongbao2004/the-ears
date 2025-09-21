@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type { Song } from "@/types";
 import { useChatStore } from "./useChatStore";
 
-
 interface PlayerStore {
 	currentSong: Song | null;
 	isPlaying: boolean;
@@ -12,6 +11,15 @@ interface PlayerStore {
 	showKaraoke: boolean;
 	showQueue: boolean;
 	showGenreAnalysis: boolean;
+	showEmotionColors: boolean;
+	showAmbientLighting: boolean;
+	showSignLanguage: boolean;
+	ambientLightingSettings: {
+		intensity: number;
+		speed: number;
+		roomMode: 'immersive' | 'subtle' | 'party' | 'focus';
+		enabled: boolean;
+	};
 	playedSongs: Song[];
 	shuffleEnabled: boolean;
 	repeatMode: 'off' | 'one' | 'all';
@@ -28,6 +36,15 @@ interface PlayerStore {
 	setShowKaraoke: (show: boolean) => void;
 	toggleQueue: () => void;
 	toggleGenreAnalysis: () => void;
+	toggleEmotionColors: () => void;
+	toggleAmbientLighting: () => void;
+	toggleSignLanguage: () => void;
+	updateAmbientLightingSettings: (settings: Partial<{
+		intensity: number;
+		speed: number;
+		roomMode: 'immersive' | 'subtle' | 'party' | 'focus';
+		enabled: boolean;
+	}>) => void;
 	stop: () => void;
 	toggleShuffle: () => void;
 	cycleRepeatMode: () => void;
@@ -42,6 +59,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 	showKaraoke: false,
 	showQueue: false,
 	showGenreAnalysis: false,
+	showEmotionColors: false,
+	showAmbientLighting: false,
+	showSignLanguage: false,
+	ambientLightingSettings: {
+		intensity: 0.8,
+		speed: 0.6,
+		roomMode: 'immersive',
+		enabled: true
+	},
 	playedSongs: [],
 	shuffleEnabled: false,
 	repeatMode: 'off',
@@ -54,7 +80,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 		});
 	},
 
-playAlbum: (songs: Song[], startIndex = 0) => {
+	playAlbum: (songs: Song[], startIndex = 0) => {
 		if (songs.length === 0) return;
 
 		const song = songs[startIndex];
@@ -77,7 +103,7 @@ playAlbum: (songs: Song[], startIndex = 0) => {
 		});
 	},
 
-setCurrentSong: (song: Song | null) => {
+	setCurrentSong: (song: Song | null) => {
 		if (!song) return;
 
 		const socket = useChatStore.getState().socket;
@@ -256,6 +282,27 @@ setCurrentSong: (song: Song | null) => {
 
 	toggleGenreAnalysis: () => {
 		set({ showGenreAnalysis: !get().showGenreAnalysis });
+	},
+
+	toggleEmotionColors: () => {
+		set({ showEmotionColors: !get().showEmotionColors });
+	},
+
+	toggleAmbientLighting: () => {
+		set({ showAmbientLighting: !get().showAmbientLighting });
+	},
+
+	toggleSignLanguage: () => {
+		set({ showSignLanguage: !get().showSignLanguage });
+	},
+
+	updateAmbientLightingSettings: (newSettings) => {
+		set({ 
+			ambientLightingSettings: { 
+				...get().ambientLightingSettings, 
+				...newSettings 
+			} 
+		});
 	},
 
 	stop: () => {

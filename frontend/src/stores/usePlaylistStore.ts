@@ -4,12 +4,14 @@ import { create } from 'zustand';
 
 interface PlaylistStore {
     playlists: Playlist[];
+    publicPlaylists: Playlist[];
     currentPlaylist: Playlist | null;
     isLoading: boolean;
     error: string | null;
 
     // Playlist CRUD operations
     fetchPlaylists: () => Promise<void>;
+    fetchPublicPlaylists: () => Promise<void>;
     createPlaylist: (name: string, description?: string, isPublic?: boolean) => Promise<void>;
     updatePlaylist: (playlistId: string, updates: Partial<Playlist>) => Promise<void>;
     deletePlaylist: (playlistId: string) => Promise<void>;
@@ -26,6 +28,7 @@ interface PlaylistStore {
 
 export const usePlaylistStore = create<PlaylistStore>((set) => ({
     playlists: [],
+    publicPlaylists: [],
     currentPlaylist: null,
     isLoading: false,
     error: null,
@@ -37,6 +40,18 @@ export const usePlaylistStore = create<PlaylistStore>((set) => ({
             set({ playlists: response.data });
         } catch (error: any) {
             set({ error: error.response?.data?.message || 'Failed to fetch playlists' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    fetchPublicPlaylists: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axiosInstance.get('/playlists/public');
+            set({ publicPlaylists: response.data });
+        } catch (error: any) {
+            set({ error: error.response?.data?.message || 'Failed to fetch public playlists' });
         } finally {
             set({ isLoading: false });
         }

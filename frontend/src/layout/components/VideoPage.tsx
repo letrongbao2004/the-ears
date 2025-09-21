@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Palette } from "lucide-react";
 
 const YT_ORIGIN = window.location.origin;
 
 const VideoPage = () => {
-	const { currentSong, showGenreAnalysis, toggleGenreAnalysis } = usePlayerStore();
+	const { currentSong, showGenreAnalysis, toggleGenreAnalysis, showEmotionColors, toggleEmotionColors } = usePlayerStore();
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -20,14 +20,23 @@ const VideoPage = () => {
 				id = u.searchParams.get("v") || "";
 			}
 			if (!id) return url;
-			const params = new URLSearchParams({ autoplay: "1", mute: "1", enablejsapi: "1", origin: YT_ORIGIN });
+			const params = new URLSearchParams({
+				autoplay: "1",
+				mute: "1",
+				enablejsapi: "1",
+				origin: YT_ORIGIN,
+				controls: "0",
+				disablekb: "1",
+				fs: "0",
+				modestbranding: "1"
+			});
 			return `https://www.youtube.com/embed/${id}?${params.toString()}`;
 		} catch {
 			return url;
 		}
 	};
 
-	// Sync native video time to audio
+	// Optimized sync for native video to audio
 	useEffect(() => {
 		const audio = document.querySelector("audio") as HTMLAudioElement | null;
 		const video = videoRef.current;
@@ -35,18 +44,30 @@ const VideoPage = () => {
 
 		let isUserSeeking = false;
 		let lastSyncTime = 0;
+		let syncRafId = 0;
 
+		// Use requestAnimationFrame for smoother sync
 		const sync = () => {
-			if (isUserSeeking) return;
-			const now = Date.now();
-			// Throttle sync to avoid too frequent updates
-			if (now - lastSyncTime < 100) return;
+			if (isUserSeeking) {
+				syncRafId = requestAnimationFrame(sync);
+				return;
+			}
+
+			const now = performance.now();
+			// Throttle sync to 30fps for better performance
+			if (now - lastSyncTime < 33.33) {
+				syncRafId = requestAnimationFrame(sync);
+				return;
+			}
 			lastSyncTime = now;
 
 			const timeDiff = Math.abs(video.currentTime - audio.currentTime);
-			if (timeDiff > 0.1) {
+			// Increase tolerance to reduce frequent seeking
+			if (timeDiff > 0.2) {
 				video.currentTime = audio.currentTime;
 			}
+
+			syncRafId = requestAnimationFrame(sync);
 		};
 
 		const handleSeekStart = () => {
@@ -55,23 +76,27 @@ const VideoPage = () => {
 
 		const handleSeekEnd = () => {
 			isUserSeeking = false;
-			// Force sync after user stops seeking
-			video.currentTime = audio.currentTime;
+			// Debounce sync after seeking
+			setTimeout(() => {
+				if (!isUserSeeking) {
+					video.currentTime = audio.currentTime;
+				}
+			}, 100);
 		};
 
-		// Listen to audio events
-		audio.addEventListener("timeupdate", sync);
-		audio.addEventListener("seeked", sync);
-		audio.addEventListener("seeking", handleSeekStart);
-		audio.addEventListener("seeked", handleSeekEnd);
+		// Start sync loop
+		syncRafId = requestAnimationFrame(sync);
+
+		// Listen to audio events with passive listeners for better performance
+		audio.addEventListener("seeking", handleSeekStart, { passive: true });
+		audio.addEventListener("seeked", handleSeekEnd, { passive: true });
 
 		// Listen to video events to detect user interaction
-		video.addEventListener("seeking", handleSeekStart);
-		video.addEventListener("seeked", handleSeekEnd);
+		video.addEventListener("seeking", handleSeekStart, { passive: true });
+		video.addEventListener("seeked", handleSeekEnd, { passive: true });
 
 		return () => {
-			audio.removeEventListener("timeupdate", sync);
-			audio.removeEventListener("seeked", sync);
+			cancelAnimationFrame(syncRafId);
 			audio.removeEventListener("seeking", handleSeekStart);
 			audio.removeEventListener("seeked", handleSeekEnd);
 			video.removeEventListener("seeking", handleSeekStart);
@@ -79,7 +104,7 @@ const VideoPage = () => {
 		};
 	}, [currentSong?.videoUrl]);
 
-	// Sync YouTube iframe time to audio via postMessage API
+	// Optimized YouTube iframe sync to audio via postMessage API
 	useEffect(() => {
 		const audio = document.querySelector("audio") as HTMLAudioElement | null;
 		const iframe = iframeRef.current;
@@ -88,9 +113,22 @@ const VideoPage = () => {
 		let rafId = 0;
 		let lastSeekTime = 0;
 		let isUserSeeking = false;
+		let commandQueue: any[] = [];
+		let isProcessingQueue = false;
 
+		// Batch commands to reduce postMessage frequency
 		const post = (command: any) => {
-			iframe.contentWindow?.postMessage(JSON.stringify(command), "*");
+			commandQueue.push(command);
+			if (!isProcessingQueue) {
+				isProcessingQueue = true;
+				setTimeout(() => {
+					commandQueue.forEach(cmd => {
+						iframe.contentWindow?.postMessage(JSON.stringify(cmd), "*");
+					});
+					commandQueue = [];
+					isProcessingQueue = false;
+				}, 16); // ~60fps batching
+			}
 		};
 
 		const playMuted = () => post({ event: "command", func: "playVideo", args: [] });
@@ -100,9 +138,9 @@ const VideoPage = () => {
 
 		const tick = () => {
 			if (!isUserSeeking) {
-				const now = Date.now();
-				// Throttle YouTube seeks to avoid too frequent API calls
-				if (now - lastSeekTime > 200) {
+				const now = performance.now();
+				// Reduce YouTube API call frequency for smoother performance
+				if (now - lastSeekTime > 500) { // Increased from 200ms to 500ms
 					seekTo(audio.currentTime);
 					lastSeekTime = now;
 				}
@@ -116,28 +154,43 @@ const VideoPage = () => {
 
 		const handleSeekEnd = () => {
 			isUserSeeking = false;
-			// Force sync after user stops seeking
-			seekTo(audio.currentTime);
+			// Debounce sync after seeking to avoid rapid API calls
+			setTimeout(() => {
+				if (!isUserSeeking) {
+					seekTo(audio.currentTime);
+				}
+			}, 200);
 		};
 
-		// ensure muted + playing
-		setMute();
-		playMuted();
+		// Initialize YouTube player with optimized settings
+		setTimeout(() => {
+			setMute();
+			playMuted();
+		}, 100); // Small delay to ensure iframe is ready
+
 		rafId = requestAnimationFrame(tick);
 
-		const handlePlay = () => playMuted();
-		const handlePause = () => pause();
+		const handlePlay = () => {
+			// Debounce play commands
+			setTimeout(() => playMuted(), 50);
+		};
+		const handlePause = () => {
+			// Debounce pause commands
+			setTimeout(() => pause(), 50);
+		};
 		const handleSeek = () => {
 			if (!isUserSeeking) {
-				seekTo(audio.currentTime);
+				// Debounce seek commands
+				setTimeout(() => seekTo(audio.currentTime), 100);
 			}
 		};
 
-		audio.addEventListener("play", handlePlay);
-		audio.addEventListener("pause", handlePause);
-		audio.addEventListener("seeked", handleSeek);
-		audio.addEventListener("seeking", handleSeekStart);
-		audio.addEventListener("seeked", handleSeekEnd);
+		// Use passive listeners for better performance
+		audio.addEventListener("play", handlePlay, { passive: true });
+		audio.addEventListener("pause", handlePause, { passive: true });
+		audio.addEventListener("seeked", handleSeek, { passive: true });
+		audio.addEventListener("seeking", handleSeekStart, { passive: true });
+		audio.addEventListener("seeked", handleSeekEnd, { passive: true });
 
 		return () => {
 			cancelAnimationFrame(rafId);
@@ -162,26 +215,55 @@ const VideoPage = () => {
 							className='w-full h-full'
 							allow='autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
 							allowFullScreen
+							style={{ pointerEvents: 'none' }}
 						/>
 					) : (
-						<video ref={videoRef} src={currentSong.videoUrl} className='w-full h-full' muted autoPlay playsInline controls />
+						<video
+							ref={videoRef}
+							src={currentSong.videoUrl}
+							className='w-full h-full'
+							muted
+							autoPlay
+							playsInline
+							preload="metadata"
+							style={{
+								willChange: 'transform',
+								transform: 'translateZ(0)',
+								backfaceVisibility: 'hidden',
+								pointerEvents: 'none'
+							}}
+						/>
 					)
 				) : (
 					<div className='text-zinc-400 text-sm'>No video available</div>
 				)}
-				
-				{/* Genre Analysis Toggle Button */}
-				<button
-					onClick={toggleGenreAnalysis}
-					className={`absolute top-4 right-4 p-2 rounded-md transition-colors ${
-						showGenreAnalysis 
-							? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+
+				{/* Analysis Toggle Buttons */}
+				<div className="absolute top-4 right-4 flex space-x-2">
+					{/* Genre Analysis Toggle Button */}
+					<button
+						onClick={toggleGenreAnalysis}
+						className={`p-2 rounded-md transition-colors ${showGenreAnalysis
+							? 'bg-emerald-600 hover:bg-emerald-700 text-white'
 							: 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300'
-					}`}
-					title="Toggle Genre Analysis"
-				>
-					<BarChart3 className="w-5 h-5" />
-				</button>
+							}`}
+						title="Toggle Genre Analysis"
+					>
+						<BarChart3 className="w-5 h-5" />
+					</button>
+
+					{/* Emotion Color Analysis Toggle Button */}
+					<button
+						onClick={toggleEmotionColors}
+						className={`p-2 rounded-md transition-colors ${showEmotionColors
+							? 'bg-purple-600 hover:bg-purple-700 text-white'
+							: 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300'
+							}`}
+						title="Toggle Emotion Color Analysis"
+					>
+						<Palette className="w-5 h-5" />
+					</button>
+				</div>
 			</div>
 		</div>
 	);

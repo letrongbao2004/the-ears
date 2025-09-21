@@ -16,7 +16,9 @@ axiosInstance.interceptors.request.use(async (config) => {
 				(config.headers as any).Authorization = `Bearer ${token}`;
 			}
 		}
-	} catch {}
+	} catch (error) {
+		console.warn('Failed to attach authorization token:', error);
+	}
 	return config;
 });
 

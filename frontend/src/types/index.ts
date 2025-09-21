@@ -54,4 +54,9 @@ export interface Playlist {
 	coverImage: string;
 	createdAt: string;
 	updatedAt: string;
+	user?: {
+		fullName: string;
+		imageUrl: string;
+		id: string;
+	};
 }

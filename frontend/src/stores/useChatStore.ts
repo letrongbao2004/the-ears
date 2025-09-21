@@ -1,6 +1,7 @@
 import { axiosInstance } from "@/lib/axios";
 import type { Message, User } from "@/types";
 import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import { io } from "socket.io-client";
 
 interface ChatStore {
@@ -13,6 +14,8 @@ interface ChatStore {
 	userActivities: Map<string, string>;
 	messages: Message[];
 	selectedUser: User | null;
+	unreadMessages: Map<string, number>; // userId -> count of unread messages
+	lastMessageFromUser: Map<string, Message>; // userId -> last message from that user
 
 	fetchUsers: () => Promise<void>;
 	initSocket: (userId: string) => void;
@@ -20,6 +23,10 @@ interface ChatStore {
 	sendMessage: (receiverId: string, senderId: string, content: string) => void;
 	fetchMessages: (userId: string) => Promise<void>;
 	setSelectedUser: (user: User | null) => void;
+	markMessagesAsRead: (userId: string) => void;
+	getUnreadCount: (userId: string) => number;
+	getTotalUnreadCount: () => number;
+	markAsReadWhenViewing: (userId: string) => void;
 }
 
 const baseURL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
@@ -29,7 +36,8 @@ const socket = io(baseURL, {
 	withCredentials: true,
 });
 
-export const useChatStore = create<ChatStore>((set, get) => ({
+export const useChatStore = create<ChatStore>()(
+	subscribeWithSelector((set, get) => ({
 	users: [],
 	isLoading: false,
 	error: null,
@@ -39,8 +47,52 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 	userActivities: new Map(),
 	messages: [],
 	selectedUser: null,
+	unreadMessages: new Map(),
+	lastMessageFromUser: new Map(),
 
-	setSelectedUser: (user) => set({ selectedUser: user }),
+	setSelectedUser: (user) => {
+		const previousUser = get().selectedUser;
+		set({ selectedUser: user });
+		
+		// Mark messages as read for the PREVIOUS user when switching away
+		if (previousUser && previousUser.clerkId !== user?.clerkId) {
+			get().markMessagesAsRead(previousUser.clerkId);
+		}
+		
+		// Also mark as read for the new user (when entering chat)
+		if (user) {
+			get().markMessagesAsRead(user.clerkId);
+		}
+	},
+
+	markMessagesAsRead: (userId: string) => {
+		set((state) => {
+			const newUnreadMessages = new Map(state.unreadMessages);
+			newUnreadMessages.delete(userId);
+			return { unreadMessages: newUnreadMessages };
+		});
+	},
+
+	markAsReadWhenViewing: (userId: string) => {
+		// Only mark as read if user is currently viewing this conversation
+		const currentUser = get().selectedUser;
+		if (currentUser && currentUser.clerkId === userId) {
+			get().markMessagesAsRead(userId);
+		}
+	},
+
+	getUnreadCount: (userId: string) => {
+		return get().unreadMessages.get(userId) || 0;
+	},
+
+	getTotalUnreadCount: () => {
+		const unreadMessages = get().unreadMessages;
+		let total = 0;
+		for (const count of unreadMessages.values()) {
+			total += count;
+		}
+		return total;
+	},
 
 	fetchUsers: async () => {
 		set({ isLoading: true, error: null });
@@ -96,9 +148,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			});
 
 			socket.on("receive_message", (message: Message) => {
-				set((state) => ({
-					messages: [...state.messages, message],
-				}));
+				set((state) => {
+					const newMessages = [...state.messages, message];
+					const newUnreadMessages = new Map(state.unreadMessages);
+					const newLastMessageFromUser = new Map(state.lastMessageFromUser);
+					
+					// ALWAYS count as unread for notifications, regardless of selected user
+					// The notification system should work even when user is in chat
+					const currentCount = newUnreadMessages.get(message.senderId) || 0;
+					const newCount = currentCount + 1;
+					newUnreadMessages.set(message.senderId, newCount);
+					
+					// Update last message from this user
+					newLastMessageFromUser.set(message.senderId, message);
+					
+					return {
+						messages: newMessages,
+						unreadMessages: newUnreadMessages,
+						lastMessageFromUser: newLastMessageFromUser
+					};
+				});
 			});
 
 			socket.on("message_sent", (message: Message) => {
@@ -146,7 +215,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 	sendMessage: async (receiverId, senderId, content) => {
 		const socket = get().socket;
-		if (!socket) return;
+		
+		if (!socket) {
+			return;
+		}
 
 		if (!receiverId || !senderId || !content) {
 			set({ error: "Missing receiver, sender or content" });
@@ -167,4 +239,5 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 			set({ isLoading: false });
 		}
 	},
-}));
+}))
+);

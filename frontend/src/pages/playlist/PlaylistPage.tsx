@@ -88,7 +88,7 @@ const PlaylistPage = () => {
 
     return (
         <div className="h-full">
-            <ScrollArea className="h-full rounded-md">
+            <ScrollArea className="h-full rounded-md scrollbar-thin">
                 <div className="relative min-h-full">
                     {/* Background gradient */}
                     <div
@@ -119,6 +119,20 @@ const PlaylistPage = () => {
                                 </div>
                                 <h1 className="text-6xl font-bold my-4 text-white">{currentPlaylist.name}</h1>
                                 
+                                {/* Creator info for public playlists */}
+                                {currentPlaylist.isPublic && currentPlaylist.user && (
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <img
+                                            src={currentPlaylist.user.imageUrl || "/logo.png"}
+                                            alt={currentPlaylist.user.fullName}
+                                            className="w-6 h-6 rounded-full"
+                                        />
+                                        <span className="text-sm text-gray-300">
+                                            Created by <span className="font-medium text-white">{currentPlaylist.user.fullName}</span>
+                                        </span>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-6 text-sm text-zinc-300 mb-4">
                                     <div className="flex items-center gap-2">
                                         <Music className="h-4 w-4" />
@@ -134,12 +148,19 @@ const PlaylistPage = () => {
                                             </span>
                                         </div>
                                     )}
-                                    {currentPlaylist.isPublic && (
-                                        <div className="flex items-center gap-2">
-                                            <Users className="h-4 w-4" />
-                                            <span>Public</span>
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {currentPlaylist.isPublic ? (
+                                            <>
+                                                <Users className="h-4 w-4 text-green-400" />
+                                                <span className="text-green-400 font-medium">Public</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Users className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-400">Private</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                                 
                                 {currentPlaylist.description && (

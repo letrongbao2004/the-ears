@@ -215,7 +215,37 @@ export const getPublicPlaylists = async (req, res, next) => {
             .sort({ updatedAt: -1 })
             .limit(20);
 
-        res.json(playlists);
+        // Get user information for each playlist
+        const playlistsWithUserInfo = await Promise.all(
+            playlists.map(async (playlist) => {
+                try {
+                    // Get user info from Clerk
+                    const { clerkClient } = await import('@clerk/express');
+                    const user = await clerkClient.users.getUser(playlist.userId);
+                    
+                    return {
+                        ...playlist.toObject(),
+                        user: {
+                            fullName: user.fullName || 'Unknown User',
+                            imageUrl: user.imageUrl || '',
+                            id: user.id
+                        }
+                    };
+                } catch (userError) {
+                    // If user not found, return playlist without user info
+                    return {
+                        ...playlist.toObject(),
+                        user: {
+                            fullName: 'Unknown User',
+                            imageUrl: '',
+                            id: playlist.userId
+                        }
+                    };
+                }
+            })
+        );
+
+        res.json(playlistsWithUserInfo);
     } catch (error) {
         next(error);
     }

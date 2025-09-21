@@ -4,6 +4,7 @@ import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage"
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react"
 import MainLayout from "./layout/MainLayout"
 import ChatPage from "./pages/chat/ChatPage"
+import ProfilePage from "./pages/profile/ProfilePage"
 import AlbumPage from "./pages/album/AlbumPage"
 import SearchPage from "./pages/search/SearchPage"
 import PlaylistPage from "./pages/playlist/PlaylistPage"
@@ -31,6 +32,8 @@ function App() {
           <Route path ="/" element={<HomePage/>} />
           <Route path ="/search" element={<SearchPage/>} />
           <Route path ="/chat" element={<ChatPage/>} />
+          <Route path ="/chat/:userId" element={<ChatPage/>} />
+          <Route path ="/profile/:userId" element={<ProfilePage/>} />
           <Route path ="/albums/:albumId" element={<AlbumPage/>} />
           <Route path ="/playlists" element={<PlaylistsPage/>} />
           <Route path ="/playlists/:playlistId" element={<PlaylistPage/>} />

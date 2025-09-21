@@ -75,17 +75,50 @@ const CreatePlaylistModal = ({ isOpen, onClose }: CreatePlaylistModalProps) => {
                         />
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="isPublic"
-                            checked={isPublic}
-                            onChange={(e) => setIsPublic(e.target.checked)}
-                            className="rounded border-zinc-600 bg-zinc-700 text-green-500 focus:ring-green-500"
-                        />
-                        <label htmlFor="isPublic" className="text-sm text-gray-300">
-                            Make this playlist public
+                    <div className="space-y-3">
+                        <label className="block text-sm font-medium text-gray-300">
+                            Privacy Settings
                         </label>
+                        
+                        <div className="space-y-3">
+                            <div className="flex items-start space-x-3">
+                                <input
+                                    type="radio"
+                                    id="private"
+                                    name="privacy"
+                                    checked={!isPublic}
+                                    onChange={() => setIsPublic(false)}
+                                    className="mt-1 text-green-500 focus:ring-green-500"
+                                />
+                                <div>
+                                    <label htmlFor="private" className="text-sm text-white font-medium cursor-pointer">
+                                        Private
+                                    </label>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Only you can see and play this playlist
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-start space-x-3">
+                                <input
+                                    type="radio"
+                                    id="public"
+                                    name="privacy"
+                                    checked={isPublic}
+                                    onChange={() => setIsPublic(true)}
+                                    className="mt-1 text-green-500 focus:ring-green-500"
+                                />
+                                <div>
+                                    <label htmlFor="public" className="text-sm text-white font-medium cursor-pointer">
+                                        Public
+                                    </label>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Anyone can see and play this playlist
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex justify-end space-x-2 pt-4">

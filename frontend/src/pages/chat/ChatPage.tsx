@@ -2,11 +2,13 @@ import Topbar from "@/components/Topbar";
 import { useChatStore } from "@/stores/useChatStore";
 import { useUser } from "@clerk/clerk-react";
 import { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import UsersList from "./components/UsersList";
 import ChatHeader from "./components/ChatHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import MessageInput from "./components/MessageInput";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
 
 const formatTime = (date: string) => {
 	return new Date(date).toLocaleTimeString("en-US", {
@@ -18,17 +20,52 @@ const formatTime = (date: string) => {
 
 const ChatPage = () => {
 	const { user } = useUser();
-	const { messages, selectedUser, fetchUsers, fetchMessages, error } = useChatStore();
+	const { userId } = useParams();
+	const { messages, selectedUser, users, fetchUsers, fetchMessages, setSelectedUser, markAsReadWhenViewing, error } = useChatStore();
+	
+	// Auto scroll hook
+	const { endRef, containerRef, scrollToBottom } = useAutoScroll([messages], 100);
 
 	useEffect(() => {
 		if (user) fetchUsers();
 	}, [fetchUsers, user]);
 
+	// Auto-select user if userId is provided in URL
+	useEffect(() => {
+		if (userId && users.length > 0 && !selectedUser) {
+			const targetUser = users.find(u => u.clerkId === userId);
+			if (targetUser) {
+				setSelectedUser(targetUser);
+			}
+		}
+	}, [userId, users, selectedUser, setSelectedUser]);
+
 	useEffect(() => {
 		if (selectedUser) fetchMessages(selectedUser.clerkId);
 	}, [selectedUser, fetchMessages]);
 
-	console.log({ messages });
+	// Additional scroll when selecting a new user
+	useEffect(() => {
+		if (selectedUser && messages.length > 0) {
+			setTimeout(() => {
+				scrollToBottom();
+				// Mark as read when viewing messages
+				markAsReadWhenViewing(selectedUser.clerkId);
+			}, 300);
+		}
+	}, [selectedUser, scrollToBottom, markAsReadWhenViewing]);
+
+	// Mark as read when new messages arrive and user is viewing
+	useEffect(() => {
+		if (selectedUser && messages.length > 0) {
+			// Small delay to ensure user sees the message
+			setTimeout(() => {
+				markAsReadWhenViewing(selectedUser.clerkId);
+			}, 1000);
+		}
+	}, [messages.length, selectedUser, markAsReadWhenViewing]);
+
+
 
 	return (
 		<main className='h-full rounded-lg bg-gradient-to-b from-zinc-800 to-zinc-900 overflow-hidden'>
@@ -49,7 +86,10 @@ const ChatPage = () => {
 							<ChatHeader />
 
 							{/* Messages */}
-							<ScrollArea className='h-[calc(100vh-340px)]'>
+							<ScrollArea 
+								className='h-[calc(100vh-340px)]' 
+								ref={containerRef}
+							>
 								<div className='p-4 space-y-4'>
 									{messages.map((message) => (
 										<div
@@ -80,6 +120,8 @@ const ChatPage = () => {
 											</div>
 										</div>
 									))}
+									{/* Invisible element to scroll to */}
+									<div ref={endRef} className="h-1" />
 								</div>
 							</ScrollArea>
 

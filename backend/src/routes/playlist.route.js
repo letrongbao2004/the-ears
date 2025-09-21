@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { 
-    createPlaylist, 
-    getUserPlaylists, 
-    getPlaylistById, 
-    updatePlaylist, 
+import {
+    createPlaylist,
+    getUserPlaylists,
+    getPlaylistById,
+    updatePlaylist,
     deletePlaylist,
     addSongToPlaylist,
     removeSongFromPlaylist,

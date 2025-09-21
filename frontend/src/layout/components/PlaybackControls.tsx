@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Video, VideoOff, BarChart3 } from "lucide-react";
+import { ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Video, VideoOff, BarChart3, Lightbulb, Palette, Hand } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { parseLRC } from "@/lib/utils";
@@ -16,7 +16,7 @@ const formatTime = (seconds: number) => {
 };
 
 export const PlaybackControls = () => {
-	const { currentSong, isPlaying, togglePlay, playNext, playPrevious, showVideo, toggleVideo, showKaraoke, toggleKaraoke, showQueue, toggleQueue, showGenreAnalysis, toggleGenreAnalysis, shuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode, setShowVideo } = usePlayerStore();
+	const { currentSong, isPlaying, togglePlay, playNext, playPrevious, showVideo, toggleVideo, showKaraoke, toggleKaraoke, showQueue, toggleQueue, showGenreAnalysis, toggleGenreAnalysis, showEmotionColors, toggleEmotionColors, showAmbientLighting, toggleAmbientLighting, showSignLanguage, toggleSignLanguage, shuffleEnabled, toggleShuffle, repeatMode, cycleRepeatMode, setShowVideo } = usePlayerStore();
 
 	const [volume, setVolume] = useState(75);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -309,9 +309,6 @@ export const PlaybackControls = () => {
 					<Button size='icon' variant='ghost' className={`btn-press hover:text-white ${showQueue ? 'text-emerald-400' : 'text-zinc-400'}`} onClick={toggleQueue}>
 						<ListMusic className='h-4 w-4' />
 					</Button>
-					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
-						<Laptop2 className='h-4 w-4' />
-					</Button>
 
 					{/* Video Toggle Button */}
 					{currentSong?.videoUrl && (
@@ -335,6 +332,39 @@ export const PlaybackControls = () => {
 						title={showGenreAnalysis ? 'Hide Music Analysis' : 'Show Music Analysis'}
 					>
 						<BarChart3 className='h-4 w-4' />
+					</Button>
+
+					{/* Emotion Colors Toggle Button */}
+					<Button 
+						size='icon' 
+						variant='ghost' 
+						className={`hover:text-white ${showEmotionColors ? 'text-purple-400' : 'text-zinc-400'}`}
+						onClick={toggleEmotionColors}
+						title={showEmotionColors ? 'Hide Emotion Colors' : 'Show Emotion Colors'}
+					>
+						<Palette className='h-4 w-4' />
+					</Button>
+
+					{/* Ambient Lighting Toggle Button */}
+					<Button 
+						size='icon' 
+						variant='ghost' 
+						className={`hover:text-white ${showAmbientLighting ? 'text-yellow-400' : 'text-zinc-400'}`}
+						onClick={toggleAmbientLighting}
+						title={showAmbientLighting ? 'Hide Ambient Lighting' : 'Show Ambient Lighting'}
+					>
+						<Lightbulb className='h-4 w-4' />
+					</Button>
+
+					{/* Sign Language Toggle Button */}
+					<Button 
+						size='icon' 
+						variant='ghost' 
+						className={`hover:text-white ${showSignLanguage ? 'text-orange-400' : 'text-zinc-400'}`}
+						onClick={toggleSignLanguage}
+						title={showSignLanguage ? 'Hide Sign Language' : 'Show Sign Language'}
+					>
+						<Hand className='h-4 w-4' />
 					</Button>
 
 					{/* Centered Video Modal */}

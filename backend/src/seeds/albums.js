@@ -16,149 +16,128 @@ const seedDatabase = async () => {
 		// First, create all songs
 		const createdSongs = await Song.insertMany([
 			{
-				title: "City Rain",
-				artist: "Urban Echo",
-				imageUrl: "/cover-images/7.jpg",
-				audioUrl: "/songs/7.mp3",
+				title: "Calm Down",
+				artist: "Karik",
+				imageUrl: "/cover-images/calmdown.jpg",
+				audioUrl: "/songs/calmdown.mp3",
+				duration: 198, // 3:18
 				plays: Math.floor(Math.random() * 5000),
-				duration: 39, // 0:39
 			},
 			{
-				title: "Neon Lights",
-				artist: "Night Runners",
-				imageUrl: "/cover-images/5.jpg",
-				audioUrl: "/songs/5.mp3",
+				title: "Xấu Xí",
+				artist: "Karik",
+				imageUrl: "/cover-images/xauxi.jpg",
+				audioUrl: "/songs/xauxi.mp3",
+				duration: 166, // 2:46
 				plays: Math.floor(Math.random() * 5000),
-				duration: 36, // 0:36
 			},
 			{
-				title: "Urban Jungle",
-				artist: "City Lights",
-				imageUrl: "/cover-images/15.jpg",
-				audioUrl: "/songs/15.mp3",
+				title: "Ai Cho Anh Lương Thiện",
+				artist: "Karik",
+				imageUrl: "/cover-images/aichoanhluongthien.jpg",
+				audioUrl: "/songs/aichoanhluongthien.mp3",
+				duration: 171, // 2:51
 				plays: Math.floor(Math.random() * 5000),
-				duration: 36, // 0:36
 			},
 			{
-				title: "Neon Dreams",
-				artist: "Cyber Pulse",
-				imageUrl: "/cover-images/13.jpg",
-				audioUrl: "/songs/13.mp3",
+				title: "Nhật Ký Vào Đời",
+				artist: "Karik (FT. Thái VG)",
+				imageUrl: "/cover-images/nhatkyvaodoi.jpg",
+				audioUrl: "/songs/nhatkyvaodoi.mp3",
+				duration: 240, // 4:00
 				plays: Math.floor(Math.random() * 5000),
-				duration: 39, // 0:39
 			},
 			{
-				title: "Summer Daze",
-				artist: "Coastal Kids",
-				imageUrl: "/cover-images/4.jpg",
-				audioUrl: "/songs/4.mp3",
+				title: "Khắc Cốt Ghi Tâm",
+				artist: "Karik (FT. TUẤN KHANH MICROWAVE) ",
+				imageUrl: "/cover-images/khaccotghitam.jpg",
+				audioUrl: "/songs/khaccotghitam.mp3",
+				duration: 176, // 2:56
 				plays: Math.floor(Math.random() * 5000),
-				duration: 24, // 0:24
 			},
 			{
-				title: "Ocean Waves",
-				artist: "Coastal Drift",
-				imageUrl: "/cover-images/9.jpg",
-				audioUrl: "/songs/9.mp3",
+				title: "Bằng Lòng",
+				artist: "Karik",
+				imageUrl: "/cover-images/banglong.jpg",
+				audioUrl: "/songs/banglong.mp3",
+				duration: 211, // 3:31
 				plays: Math.floor(Math.random() * 5000),
-				duration: 28, // 0:28
 			},
 			{
-				title: "Crystal Rain",
-				artist: "Echo Valley",
-				imageUrl: "/cover-images/16.jpg",
-				audioUrl: "/songs/16.mp3",
+				title: "Lẽ Đương Nhiên",
+				artist: "Karik",
+				imageUrl: "/cover-images/leduongnhien.jpg",
+				audioUrl: "/songs/leduongnhien.mp3",
+				duration: 221, // 3:41
 				plays: Math.floor(Math.random() * 5000),
-				duration: 39, // 0:39
 			},
 			{
-				title: "Starlight",
-				artist: "Luna Bay",
-				imageUrl: "/cover-images/10.jpg",
-				audioUrl: "/songs/10.mp3",
+				title: "Không Quan Tâm",
+				artist: "Karik",
+				imageUrl: "/cover-images/khongquantam.jpg",
+				audioUrl: "/songs/khongquantam.mp3",
+				duration: 201, // 3:21
 				plays: Math.floor(Math.random() * 5000),
-				duration: 30, // 0:30
 			},
 			{
-				title: "Stay With Me",
-				artist: "Sarah Mitchell",
-				imageUrl: "/cover-images/1.jpg",
-				audioUrl: "/songs/1.mp3",
+				title: "Mời Người Kế Tiếp",
+				artist: "Karik (FT. ONLY C)",
+				imageUrl: "/cover-images/moinguoiketiep.jpg",
+				audioUrl: "/songs/moinguoiketiep.mp3",
+				duration: 190, // 3:10
 				plays: Math.floor(Math.random() * 5000),
-				duration: 46, // 0:46
 			},
 			{
-				title: "Midnight Drive",
-				artist: "The Wanderers",
-				imageUrl: "/cover-images/2.jpg",
-				audioUrl: "/songs/2.mp3",
+				title: "Có Chơi Có Chịu",
+				artist: "Karik (FT. ONLY C)",
+				imageUrl: "/cover-images/cochoicochiu.jpg",
+				audioUrl: "/songs/cochoicochiu.mp3",
+				duration: 221, // 3:41
 				plays: Math.floor(Math.random() * 5000),
-				duration: 41, // 0:41
 			},
 			{
-				title: "Moonlight Dance",
-				artist: "Silver Shadows",
-				imageUrl: "/cover-images/14.jpg",
-				audioUrl: "/songs/14.mp3",
+				title: "Kíu",
+				artist: "Karik (FT. MIU LÊ)",
+				imageUrl: "/cover-images/kiu.jpg",
+				audioUrl: "/songs/kiu.mp3",
+				duration: 207, // 3:27
 				plays: Math.floor(Math.random() * 5000),
-				duration: 27, // 0:27
 			},
 			{
-				title: "Lost in Tokyo",
-				artist: "Electric Dreams",
-				imageUrl: "/cover-images/3.jpg",
-				audioUrl: "/songs/3.mp3",
+				title: "Thao Túng Tâm Trí",
+				artist: "Karik (FT. ONLY C)",
+				imageUrl: "/cover-images/thaotungtamtri.jpg",
+				audioUrl: "/songs/thaotungtamtri.mp3",
+				duration: 199, // 3:19
 				plays: Math.floor(Math.random() * 5000),
-				duration: 24, // 0:24
 			},
 			{
-				title: "Neon Tokyo",
-				artist: "Future Pulse",
-				imageUrl: "/cover-images/17.jpg",
-				audioUrl: "/songs/17.mp3",
+				title: "Từ Đó Về Sau",
+				artist: "Karik",
+				imageUrl: "/cover-images/tudovesau.jpg",
+				audioUrl: "/songs/tudovesau.mp3",
+				duration: 238, // 3:58
 				plays: Math.floor(Math.random() * 5000),
-				duration: 39, // 0:39
 			},
 			{
-				title: "Purple Sunset",
-				artist: "Dream Valley",
-				imageUrl: "/cover-images/12.jpg",
-				audioUrl: "/songs/12.mp3",
+				title: "Bạn Đời",
+				artist: "Karik (FT. GDUCKY)",
+				imageUrl: "/cover-images/bandoi.jpg",
+				audioUrl: "/songs/bandoi.mp3",
+				duration: 305, // 5:05
 				plays: Math.floor(Math.random() * 5000),
-				duration: 17, // 0:17
 			},
 		]);
 
 		// Create albums with references to song IDs
 		const albums = [
 			{
-				title: "Urban Nights",
-				artist: "Various Artists",
-				imageUrl: "/albums/1.jpg",
+				title: "412",
+				artist: "Karik",
+				imageUrl: "/albums/412.jpg",
 				releaseYear: 2024,
-				songs: createdSongs.slice(0, 4).map((song) => song._id),
-			},
-			{
-				title: "Coastal Dreaming",
-				artist: "Various Artists",
-				imageUrl: "/albums/2.jpg",
-				releaseYear: 2024,
-				songs: createdSongs.slice(4, 8).map((song) => song._id),
-			},
-			{
-				title: "Midnight Sessions",
-				artist: "Various Artists",
-				imageUrl: "/albums/3.jpg",
-				releaseYear: 2024,
-				songs: createdSongs.slice(8, 11).map((song) => song._id),
-			},
-			{
-				title: "Eastern Dreams",
-				artist: "Various Artists",
-				imageUrl: "/albums/4.jpg",
-				releaseYear: 2024,
-				songs: createdSongs.slice(11, 14).map((song) => song._id),
-			},
+				songs: createdSongs.slice(0, 14).map((song) => song._id),
+			},	
 		];
 
 		// Insert all albums
